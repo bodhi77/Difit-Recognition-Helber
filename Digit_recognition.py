@@ -3,13 +3,12 @@ import numpy as np
 from tensorflow.keras.models import load_model
 
 camera_source = 0
-
 cap = cv2.VideoCapture(camera_source + cv2.CAP_DSHOW)
+
 WIDTH = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
 HEIGHT = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
 
 model = load_model('model/digits.h5')
-
 
 def prediction(image, model):
     img = cv2.resize(image, (28, 28))
@@ -24,10 +23,10 @@ def prediction(image, model):
         prob = 0
     return result, prob
 
-
 while True:
 
     _, frame = cap.read()
+    
     # frame = cv2.rotate(frame, cv2.ROTATE_180)
     frame_copy = frame.copy()
 
@@ -76,9 +75,6 @@ while True:
         img = cv2.imread(img_dict[result])
         cv2.imshow('image', img)
         print(result)
-    
-    # else:
-    #     print("0")
 
     if key == ord('1'):  # switch to webcam
         camera_source = 1
