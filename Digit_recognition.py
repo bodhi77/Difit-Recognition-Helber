@@ -48,8 +48,10 @@ while True:
 
     if camera_source == 1:
         cv2.putText(frame_copy, "Web Cam", (260, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 0), 2, cv2.LINE_AA)
+        cv2.putText(frame_copy, "Press 0 to Switch The Camera", (180, 80), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 0), 2, cv2.LINE_AA)
     else:
         cv2.putText(frame_copy, "Built-in Camera", (210, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2, cv2.LINE_AA)
+        cv2.putText(frame_copy, "Press 1 to Switch The Camera", (180, 80), cv2.FONT_HERSHEY_PLAIN, 1, (0, 0, 255), 2, cv2.LINE_AA)
     
     cv2.rectangle(frame_copy, bbox[0], bbox[1], (0, 255, 0), 3)
 
