@@ -3,9 +3,10 @@ import cv2
 import numpy as np
 import PIL.Image, PIL.ImageTk
 import time
-from tensorflow.keras.models import load_model
+from tf_functions import load_tf_model
+# from tensorflow.keras.models import load_model
 
-model = load_model('model/digits.h5')
+model = load_tf_model('model/digits.h5')
 
 class App:
     def __init__(self, window, window_title, video_source=1):

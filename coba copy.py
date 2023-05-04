@@ -21,21 +21,36 @@ class App:
         self.canvas.pack()
 
         # Button that lets the user take a snapshot
-        self.btn_snapshot = tkinter.Button(window, text = "Snapshot", width = 50, command = self.snapshot)
-        self.btn_snapshot.pack(anchor=tkinter.CENTER, expand=True)
+        # self.btn_snapshot = tkinter.Button(window, text = "Snapshot", width = 50, command = self.snapshot)
+        # self.btn_snapshot.pack(anchor=tkinter.CENTER, expand=True)
+
+        # Button that let the user show last detected image
+        self.btn_show_last_image = tkinter.Button(window, text="Show Last Image", width=50, command=self.show_last_image)
+        self.canvas.create_window(100, 50, window=self.btn_show_last_image)
 
         # 
         self.delay = 15
         self.update()
 
         self.window.mainloop()
+    
+    def show_last_image(self):
+        last_image_path = "frame-" + time.strftime("%d-%m-%Y") + "-*.jpg"
+        last_image_file = max(glob.glob(last_image_path), key=os.path.getctime)
+        last_image = cv2.imread(last_image_file)
+        
+        # Display last captured image on canvas 
+        self.last_photo = PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(last_image))
+        self.canvas.create_image(self.canvas.winfo_width() - self.last_photo.width() - 10, 10, image=self.last_photo, anchor=tkinter.NE)
 
     def snapshot(self):
         # Get a frame from the video source
-        ret, frame =self.vid.get_frame()
-
+        ret, frame = self.vid.get_frame()
+        
         if ret:
-            cv2.imwrite("frame-" + time.strftime("%d-%m-%Y-%H-%M-%S") + ".jpg", cv2.COLOR_RGB2BGR)
+            global last_captured_image
+            last_captured_image = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+            cv2.imwrite("frame-" + time.strftime("%d-%m-%Y-%H-%M-%S") + ".jpg", last_captured_image)
 
     def update(self):
         # Get a frame from the video source
@@ -86,16 +101,20 @@ class App:
                 9: 'image9.jpg'
                 }
             
-            # retrieve file name and print result based on input result
-            if result in img_dict:
-                img = cv2.imread(img_dict[result])
+            # # retrieve file name and print result based on input result
+            # if result in img_dict:
+            #     img = cv2.imread(img_dict[result])
 
-                # Display cropped image on canvas
+            #     # Display cropped image on canvas
+            #     self.img_result = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(cv2.resize(img, (300, 300))))
+            #     self.canvas.create_image(self.canvas.winfo_width()-self.img_result.width(), self.cropped_photo.height()+400, image = self.img_result, anchor = tkinter.SE)
+
+            # Display last captured image on canvas if requested
+            if hasattr(self, 'last_photo'):
+                self.canvas.delete("last_photo")
                 self.img_result = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(cv2.resize(img, (300, 300))))
-                self.canvas.create_image(self.canvas.winfo_width()-self.img_result.width(), self.cropped_photo.height()+400, image = self.img_result, anchor = tkinter.SE)
-
-                print(result)
-
+                self.canvas.create_image(self.canvas.winfo_width() - self.last_photo.width() - 10, 10, image=self.last_photo, anchor=tkinter.NE, tag="last_photo")
+            print(result)
         self.window.after(self.delay, self.update)
 
 class MyVideoCapture:

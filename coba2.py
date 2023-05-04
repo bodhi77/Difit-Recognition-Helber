@@ -7,8 +7,18 @@ from tensorflow.keras.models import load_model
 
 model = load_model('model/digits.h5')
 
+#Fonts
+font1=("Helvetica", 16)
+
+#Backgrounds
+bg1="#1D4B4A"
+bg2="#54B2AF"
+
+#Foregrounds
+fg1="#FFFFFF"
+
 class App:
-    def __init__(self, window, window_title, video_source=1):
+    def __init__(self, window, window_title, video_source=0):
         self.window = window
         self.window.title(window_title)
         self.video_source = video_source
@@ -18,13 +28,18 @@ class App:
 
         # Create a canvas that can fit the above video source size
         self.canvas = tkinter.Canvas(window, width=1920, height=1080)
-        self.canvas.pack()
+        self.canvas.pack(fill = "both", expand = True)
 
-        # Button that lets the user take a snapshot
-        self.btn_snapshot = tkinter.Button(window, text = "Snapshot", width = 50, command = self.snapshot)
-        self.btn_snapshot.pack(anchor=tkinter.CENTER, expand=True)
+        # Capture Button
+        self.cap_btn_status = False
+        self.cap_btn_text = tkinter.StringVar()
+        self.cap_btn_text.set("Capture")
+        self.cap_btn = tkinter.Button(window, textvariable=self.cap_btn_text, font=font1, bg=bg2, fg=fg1, width=15, height=1, command=self.toggle_capture_button)
 
-        # 
+        # Add The Button to Canvas
+        self.canvas.create_window(130, 750, window=self.cap_btn)
+        
+        ####
         self.delay = 15
         self.update()
 
@@ -36,6 +51,13 @@ class App:
 
         if ret:
             cv2.imwrite("frame-" + time.strftime("%d-%m-%Y-%H-%M-%S") + ".jpg", cv2.COLOR_RGB2BGR)
+
+    def toggle_capture_button(self):
+        self.cap_btn_status = not self.cap_btn_status
+        if self.cap_btn_status:
+            self.cap_btn_text.set("Capturing...")
+        else:
+            self.cap_btn_text.set("Capture")
 
     def update(self):
         # Get a frame from the video source
@@ -50,8 +72,8 @@ class App:
             
             img_cropped = frame[bbox[0][1]:bbox[1][1], bbox[0][0]:bbox[1][0]]
             img_gray = cv2.cvtColor(img_cropped, cv2.COLOR_BGR2GRAY)
-            img_gray = cv2.resize(img_gray, (200, 200))
-            
+            img_gray = cv2.resize(img_gray, (250, 250))
+
             # Draw bbox on canvas
             cv2.rectangle(frame, bbox[0], bbox[1], (0, 255, 0), 2)
             
@@ -61,14 +83,12 @@ class App:
 
             # Display cropped image on canvas
             self.cropped_photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(img_gray))
-            self.canvas.create_image(self.canvas.winfo_width()-self.photo.width(), 0, image = self.cropped_photo, anchor = tkinter.NE)
+            self.canvas.create_image(self.cropped_photo.width()+10, self.photo.height()+10, image = self.cropped_photo, anchor = tkinter.NE)
 
             # Make prediction
             result, probability = self.vid.prediction(img_gray, model)
             
             # Display prediction and result on canvas
-            # self.canvas.delete("prediction")
-            # self.canvas.delete("result")
             self.canvas.create_text(10, 10, text=f"Result: {result}", fill="yellow", anchor=tkinter.NW, font=("Helvetica", 16), tag="prediction")
             self.canvas.create_text(10, 40, text=f"Probability: {probability:.2f}", fill="yellow", anchor=tkinter.NW, font=("Helvetica", 16), tag="result")
 
@@ -87,15 +107,14 @@ class App:
                 }
             
             # retrieve file name and print result based on input result
-            if result in img_dict:
+            if result in img_dict and self.cap_btn_status:
                 img = cv2.imread(img_dict[result])
 
-                # Display cropped image on canvas
-                self.img_result = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(cv2.resize(img, (300, 300))))
+                # display cropped image on canvas
+                self.img_result = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(cv2.resize(img, (400, 400))))
                 self.canvas.create_image(self.canvas.winfo_width()-self.img_result.width(), self.cropped_photo.height()+400, image = self.img_result, anchor = tkinter.SE)
-
                 print(result)
-
+                
         self.window.after(self.delay, self.update)
 
 class MyVideoCapture:
@@ -133,14 +152,12 @@ class MyVideoCapture:
             result = 0
             prob = 0
         return result, prob
-
-
     
     # Release the video source when the object is destroyed
     def __del__(self):
         if self.vid.isOpened():
             self.vid.release()
 
-        
+
 # Create a window and pass it to the Application object
 App(tkinter.Tk(), "Tkinter and OpenCV")
